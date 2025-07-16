@@ -1,0 +1,10 @@
+dist/
+deploy_versions/
+.temp/
+.rn_temp/
+.history
+.husky
+node_modules/
+.DS_Store
+.swc
+*.local
