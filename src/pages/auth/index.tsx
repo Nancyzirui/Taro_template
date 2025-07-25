@@ -1,16 +1,20 @@
 import { View, Button } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useReady } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store'
+import { commonService } from '@/services/common'
 import './index.scss'
 
 export default function Auth () {
   const [loading, setLoading] = useState(false)
   const { setUserInfo, setLoginStatus, setAuthToken, isLoggedIn } = useAuthStore()
 
-  useEffect(() => {
-    // 使用标准返回按钮实现
+  // 页面准备就绪后设置标题
+  useReady(() => {
     Taro.setNavigationBarTitle({ title: '授权登录' })
+  })
+
+  useEffect(() => {
     return () => {
       if (isLoggedIn) {
         Taro.navigateBack()
@@ -20,40 +24,68 @@ export default function Auth () {
     }
   }, [isLoggedIn])
 
-  const handleLogin = () => {
-    setLoading(true)
-    Taro.login({
-      success: (res) => {
-        if (res.code) {
-          // 模拟获取用户信息
-          const userInfo = {
-            nickname: '微信用户',
-            avatar: 'https://picsum.photos/100'
-          }
+  const handleLogin = async () => {
+    const loadingTask = Taro.showLoading({ title: '登录中...', mask: true })
+    try {
+      // 并行执行获取用户信息和登录code
+      const [userProfile, loginRes] = await Promise.all([
+        new Promise<{ nickName: string; avatarUrl: string }>((resolve, reject) => {
+          Taro.getUserProfile({
+            desc: '用于完善会员资料',
+            success: (res) => {
+              resolve({
+                nickName: res.userInfo.nickName,
+                avatarUrl: res.userInfo.avatarUrl
+              })
+            },
+            fail: reject
+          })
+        }),
+        Taro.login()
+      ])
 
-          // 更新zustand store
-          setUserInfo(userInfo)
-          setLoginStatus(true)
-          setAuthToken(res.code)
-
-          Taro.showToast({ title: '登录成功', icon: 'success' })
-          const { router } = Taro.getCurrentInstance()
-          const redirect = router?.params?.redirect
-          if (redirect) {
-            Taro.redirectTo({
-              url: decodeURIComponent(redirect)
-            })
-          } else {
-            Taro.navigateBack()
-          }
-        } else {
-          Taro.showToast({ title: '登录失败', icon: 'none' })
-        }
-      },
-      complete: () => {
-        setLoading(false)
+      if (!loginRes.code) {
+        throw new Error('获取登录信息失败')
       }
-    })
+
+      // 调用登录接口获取token（传递用户信息和登录code）
+      const { token } = await commonService.ttLogin(
+        loginRes.code,
+        loginRes.anonymousCode,
+        {
+          extraData: {
+            nickName: userProfile.nickName,
+            avatarUrl: userProfile.avatarUrl
+          }
+        }
+      )
+      setAuthToken(token)
+      setLoginStatus(true)
+      setUserInfo({
+        nickname: userProfile.nickName,
+        avatar: userProfile.avatarUrl
+      })
+
+      Taro.showToast({ title: '登录成功', icon: 'success' })
+      const { router } = Taro.getCurrentInstance()
+      const redirect = router?.params?.redirect
+      if (redirect) {
+        Taro.redirectTo({
+          url: decodeURIComponent(redirect)
+        })
+      } else {
+        Taro.navigateBack()
+      }
+    } catch (error) {
+      console.error('登录失败:', error)
+      Taro.showToast({
+        title: '登录失败: ' + (error.message || '未知错误'),
+        icon: 'none'
+      })
+    } finally {
+      Taro.hideLoading()
+    }
+
   }
 
   return (
@@ -63,7 +95,7 @@ export default function Auth () {
         onClick={handleLogin}
         className='login-btn'
       >
-        微信一键登录
+        授权登录
       </Button>
     </View>
   )

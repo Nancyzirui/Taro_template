@@ -34,13 +34,12 @@ export const enhanceRequest = <T>(
     loadingText = '加载中...'
   } = options
 
-  let loadingTask: any = null
   let retry = 0
 
   const executeRequest = (): Promise<T> => {
     // 显示加载状态
     if (showLoading) {
-      loadingTask = Taro.showLoading({
+      Taro.showLoading({
         title: loadingText,
         mask: true
       })
@@ -74,7 +73,7 @@ export const enhanceRequest = <T>(
         return res.data
       })
       .finally(() => {
-        loadingTask?.hide()
+        Taro.hideLoading()
       })
   }
 

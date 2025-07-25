@@ -1,4 +1,5 @@
 
+import Taro from '@tarojs/taro'
 import { create } from 'zustand'
 
 interface AuthState {
@@ -11,14 +12,31 @@ interface AuthState {
   setAuthToken: (token: string) => void
 }
 
+/**
+ * 用户认证状态管理
+ * 初始化时会从storage中读取已保存的状态
+ */
 const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: false,
-  authToken: null,
-  userInfo: null,
-  setAuthState: (isLoggedIn, authToken) => set({ isLoggedIn, authToken }),
-  setUserInfo: (userInfo) => set({ userInfo }),
-  setLoginStatus: (status) => set({ isLoggedIn: status }),
-  setAuthToken: (token) => set({ authToken: token })
+  isLoggedIn: Taro.getStorageSync('isLoggedIn') || false,
+  authToken: Taro.getStorageSync('authToken') || null,
+  userInfo: Taro.getStorageSync('userInfo') || null,
+  setAuthState: (isLoggedIn, authToken) => {
+    Taro.setStorageSync('isLoggedIn', isLoggedIn)
+    Taro.setStorageSync('authToken', authToken)
+    set({ isLoggedIn, authToken })
+  },
+  setUserInfo: (userInfo) => {
+    Taro.setStorageSync('userInfo', userInfo)
+    set({ userInfo })
+  },
+  setLoginStatus: (status) => {
+    Taro.setStorageSync('isLoggedIn', status)
+    set({ isLoggedIn: status })
+  },
+  setAuthToken: (token) => {
+    Taro.setStorageSync('authToken', token)
+    set({ authToken: token })
+  }
 }))
 
 export { useAuthStore, AuthState }

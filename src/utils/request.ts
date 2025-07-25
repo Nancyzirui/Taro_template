@@ -11,7 +11,10 @@ interface RequestOptions {
 
 const request = (options: RequestOptions) => {
   const { url, method = 'GET', data, header = {} } = options
-  
+
+  // 从storage获取token
+  const token = Taro.getStorageSync('authToken')
+
   return new Promise((resolve, reject) => {
     Taro.request({
       url: `${BASE_URL}${url}`,
@@ -19,6 +22,7 @@ const request = (options: RequestOptions) => {
       data,
       header: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...header
       },
       success: (res) => {
