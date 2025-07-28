@@ -1,5 +1,6 @@
-import { View, Text, Button } from '@tarojs/components'
+import { View, Text, Button, ScrollView } from '@tarojs/components'
 import Banner from '@/components/Banner'
+import WaterfallFlow from '@/components/WaterfallFlow'
 import CategoryScroll from '@/components/CategoryScroll'
 import Taro, { useLoad } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
@@ -77,6 +78,7 @@ export default function Index () {
         currentIndex={currentTabIndex}
         onTabClick={handleTabClick}
       />
+      <WaterfallFlow tabId={categories[currentTabIndex]?.id || 1} />
     </View>
   )
 }
