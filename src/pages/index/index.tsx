@@ -1,4 +1,4 @@
-import { View, Text, Button, ScrollView } from '@tarojs/components'
+import { View } from '@tarojs/components'
 import Banner from '@/components/Banner'
 import WaterfallFlow from '@/components/WaterfallFlow'
 import CategoryScroll from '@/components/CategoryScroll'

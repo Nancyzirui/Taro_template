@@ -1,4 +1,4 @@
-import { View, ScrollView, Image, Text } from '@tarojs/components'
+import { View, Image, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import './index.scss'
