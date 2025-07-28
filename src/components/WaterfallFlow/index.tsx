@@ -71,13 +71,77 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
     fetchData(page)
   }
 
+  // 监听页面滚动到底部
+  useEffect(() => {
+    console.log('🔄 初始化滚动监听，当前环境:', process.env.TARO_ENV)
+    const handleReachBottom = () => {
+      console.log('✅ 触发滚动到底部事件')
+      if (!loading && hasMore) {
+        console.log('⏳ 开始加载第', page, '页数据...')
+        handleScrollToLower()
+      }
+    }
+
+    // 抖音小程序特殊处理
+    if (process.env.TARO_ENV === 'tt') {
+      console.log('?? 初始化抖音小程序滚动监听')
+      // 抖音小程序需要使用页面事件
+      const pageInstance = Taro.getCurrentInstance()
+      if (pageInstance?.page?.onReachBottom) {
+        console.log('🔔 注册抖音onReachBottom事件')
+        pageInstance.page.onReachBottom = () => {
+          console.log('🎯 抖音onReachBottom触发')
+          handleReachBottom()
+        }
+      }
+      return () => {
+        console.log('🧹 清理抖音小程序事件监听')
+      }
+    }
+    // 京东小程序特殊处理
+    else if (process.env.TARO_ENV === 'jd') {
+      console.log('🛒 初始化京东小程序滚动监听')
+      // 京东小程序需要使用页面事件
+      const pageInstance = Taro.getCurrentInstance()
+      if (pageInstance?.page?.onReachBottom) {
+        console.log('🔔 注册京东onReachBottom事件')
+        pageInstance.page.onReachBottom = () => {
+          console.log('🎯 京东onReachBottom触发')
+          handleReachBottom()
+        }
+      }
+      return () => {
+        console.log('🧹 清理京东小程序事件监听')
+      }
+    }
+    // 其他环境使用通用监听
+    else {
+      console.log('🖱️ 初始化通用滚动监听')
+      const scrollHandler = () => {
+        const scrollHeight = document.documentElement.scrollHeight
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop
+        const clientHeight = document.documentElement.clientHeight
+        const distanceToBottom = scrollHeight - scrollTop - clientHeight
+        console.log('📏 当前滚动位置:', {
+          scrollTop,
+          scrollHeight,
+          clientHeight,
+          distanceToBottom
+        })
+        if (distanceToBottom < 100) {
+          handleReachBottom()
+        }
+      }
+
+      window.addEventListener('scroll', scrollHandler)
+      return () => {
+        window.removeEventListener('scroll', scrollHandler)
+      }
+    }
+  }, [loading, hasMore, handleScrollToLower])
+
   return (
-    <ScrollView
-      className='waterfall-flow'
-      scrollY
-      onScrollToLower={handleScrollToLower}
-      lowerThreshold={100}
-    >
+    <View className='waterfall-flow'>
       <View className='waterfall-container'>
         {data.map(item => (
           <View key={item.id} className='waterfall-item'>
@@ -122,7 +186,7 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
           </View>
         )}
       </View>
-    </ScrollView>
+    </View>
   )
 }
 

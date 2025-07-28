@@ -4,5 +4,6 @@ export default definePageConfig({
   navigationBarBackgroundColor: '#fff',
   // backgroundTextStyle: 'dark',
   // enablePullDownRefresh: true,
-  // navigationStyle: 'default'
+  // navigationStyle: 'default',
+  onReachBottomDistance: 100 // 设置触发onReachBottom事件的滚动距离
 })

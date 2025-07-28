@@ -50,6 +50,12 @@ export default function Index () {
     { id: 17, name: '数码', width: 100 },
     { id: 18, name: '家居', width: 100 },
   ]
+/**
+* 处理标签点击事件
+*
+* @param index 被点击标签的索引
+* @param id 被点击标签的标识符
+*/
   const handleTabClick = (index: number, id: any) => {
     setCurrentTabIndex(index)
 
