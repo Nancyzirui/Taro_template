@@ -21,7 +21,7 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [placeholderHeight, setPlaceholderHeight] = useState(0)
-
+  console.log('tabId', tabId)
   // 获取图片高度比例，用于占位
   useEffect(() => {
     const systemInfo = Taro.getSystemInfoSync()
