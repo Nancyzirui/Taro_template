@@ -1,5 +1,5 @@
 import { View, Button } from '@tarojs/components'
-import Taro, { useReady } from '@tarojs/taro'
+import Taro, { useReady, useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store'
 import { commonService } from '@/services/common'
@@ -10,14 +10,20 @@ export default function Auth () {
   const { setUserInfo, setLoginStatus, setAuthToken, isLoggedIn } = useAuthStore()
 
   // 页面准备就绪后设置标题
-  useReady(() => {
+  useDidShow(() => {
+    console.log('isLoggedIn', isLoggedIn)
     Taro.setNavigationBarTitle({ title: '授权登录' })
   })
 
   useEffect(() => {
     return () => {
+      const pages = Taro.getCurrentPages()
       if (isLoggedIn) {
-        Taro.navigateBack()
+        if (pages.length > 1) {
+          Taro.navigateBack()
+        } else {
+          Taro.switchTab({ url: '/pages/index/index' })
+        }
       } else {
         Taro.switchTab({ url: '/pages/index/index' })
       }
@@ -52,12 +58,12 @@ export default function Auth () {
       const { token } = await commonService.ttLogin(
         loginRes.code,
         loginRes.anonymousCode,
-        {
-          extraData: {
-            nickName: userProfile.nickName,
-            avatarUrl: userProfile.avatarUrl
-          }
-        }
+        // {
+        //   extraData: {
+        //     nickName: userProfile.nickName,
+        //     avatarUrl: userProfile.avatarUrl
+        //   }
+        // }
       )
       setAuthToken(token)
       setLoginStatus(true)
@@ -69,12 +75,32 @@ export default function Auth () {
       Taro.showToast({ title: '登录成功', icon: 'success' })
       const { router } = Taro.getCurrentInstance()
       const redirect = router?.params?.redirect
+
       if (redirect) {
-        Taro.redirectTo({
-          url: decodeURIComponent(redirect)
-        })
+        const decodedUrl = decodeURIComponent(redirect)
+        // 检查是否是tabbar页面
+        const tabbarPages = ['/pages/index/index', '/pages/product/index', '/pages/profile/index']
+        const isTabbarPage = tabbarPages.some(page => decodedUrl.includes(page))
+
+        if (isTabbarPage) {
+          Taro.switchTab({ url: decodedUrl })
+        } else {
+          // 检查当前页面栈，避免在首页调用navigateBack
+          const pages = Taro.getCurrentPages()
+          if (pages.length > 1) {
+            Taro.navigateBack()
+          } else {
+            Taro.switchTab({ url: '/pages/index/index' })
+          }
+        }
       } else {
-        Taro.navigateBack()
+        // 默认跳转逻辑
+        const pages = Taro.getCurrentPages()
+        if (pages.length > 1) {
+          Taro.navigateBack()
+        } else {
+          Taro.switchTab({ url: '/pages/index/index' })
+        }
       }
     } catch (error) {
       console.error('登录失败:', error)

@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
 
-const BASE_URL = 'https://your-api-domain.com'
+const BASE_URL = 'https://test.chenggnet.com:88/business-platform-mobile/api'
 
 interface RequestOptions {
   url: string
@@ -22,6 +22,8 @@ const request = (options: RequestOptions) => {
       data,
       header: {
         'Content-Type': 'application/json',
+        'app-id': process.env.TARO_APP_ID || '',
+        'app-type': process.env.TARO_APP_TYPE || '',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...header
       },

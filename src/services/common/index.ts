@@ -23,7 +23,7 @@ export const commonService = {
     }
   ): Promise<{token: string}> => {
     return enhanceRequest({
-      url: '/api/auth/ttlogin',
+      url: '/login/douyin',
       method: 'POST',
       data: {
         code,

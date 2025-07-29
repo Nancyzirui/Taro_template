@@ -1,4 +1,5 @@
 import { View, ScrollView, Image, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import './index.scss'
 
@@ -68,7 +69,15 @@ export default function ProductList({ tabId }: ProductListProps) {
     >
       <View className='product-grid'>
         {products.map(product => (
-          <View key={product.id} className='product-item'>
+          <View
+            key={product.id}
+            className='product-item'
+            onClick={() => {
+              Taro.redirectTo({
+                url: `/pages/productDetail/index?id=${product.id}`,
+              })
+            }}
+          >
             <View className='image-container'>
               <Image
                 src={product.image}
