@@ -17,16 +17,6 @@ export default function Auth () {
 
   useEffect(() => {
     return () => {
-      const pages = Taro.getCurrentPages()
-      if (isLoggedIn) {
-        if (pages.length > 1) {
-          Taro.navigateBack()
-        } else {
-          Taro.switchTab({ url: '/pages/index/index' })
-        }
-      } else {
-        Taro.switchTab({ url: '/pages/index/index' })
-      }
     }
   }, [isLoggedIn])
 
