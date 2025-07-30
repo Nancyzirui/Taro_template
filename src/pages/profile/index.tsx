@@ -1,9 +1,12 @@
 import { View, Text, Image } from '@tarojs/components'
 import { AuthWrapper } from '../../utils/authWrapper'
 import Taro, { useLoad } from '@tarojs/taro'
+import { useAuthStore } from '../../store'
 import './index.scss'
 
 function ProfilePage() {
+  const { userInfo } = useAuthStore()
+
   useLoad(() => {
     console.log('Profile page loaded.')
   })
@@ -13,12 +16,12 @@ function ProfilePage() {
       {/* 用户信息区域 */}
       <View className='user-card'>
         <Image
-          src='https://picsum.photos/300/400'
+          src={userInfo?.avatar || 'https://picsum.photos/300/400'}
           className='avatar'
           mode='aspectFill'
         />
         <View className='user-meta'>
-          <Text className='nickname'>用户名</Text>
+          <Text className='nickname'>{userInfo?.nickname || '用户名'}</Text>
           <Text className='member-level'>黄金会员</Text>
         </View>
       </View>

@@ -44,3 +44,10 @@ export const commonService = {
     }, options)
   }
 }
+// 获取分类列表
+export const getCategoryList = (options?: RequestOptions): Promise<Array<{ id: number; name: string }>> => {
+  return enhanceRequest({
+    url: '/goods/category/list',
+    method: 'GET'
+  }, options)
+}
