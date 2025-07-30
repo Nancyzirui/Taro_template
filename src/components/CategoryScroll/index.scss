@@ -3,6 +3,9 @@
   padding: 16px 0;
   background-color: #fff;
   margin-top: 20rpx;
+  position: sticky;
+  top: 0; /* 相对于视口顶部 */
+  z-index: 1000; /* 确保在其他内容之上 */
 
   .scroll-container {
     white-space: nowrap;
