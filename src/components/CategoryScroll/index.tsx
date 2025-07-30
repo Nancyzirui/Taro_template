@@ -17,7 +17,7 @@ interface CategoryScrollProps {
 }
 
 export default function CategoryScroll({
-  categories,
+  categories = [],
   currentIndex = 0,
   onTabClick
 }: CategoryScrollProps) {

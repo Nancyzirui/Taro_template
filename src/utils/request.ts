@@ -29,6 +29,7 @@ const request = (options: RequestOptions) => {
       },
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          // console.log(`[API] ${method} ${url}`, data, res.data)
           resolve(res.data)
         } else {
           reject(res.data)

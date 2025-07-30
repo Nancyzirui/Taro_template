@@ -1,15 +1,11 @@
 import { View, Image, Text } from "@tarojs/components";
 import Taro from "@tarojs/taro";
 import { useState, useEffect } from "react";
+import { productService } from "@/services/product";
+import { ensureImageUrl } from "@/utils/imageHelper";
 import "./index.scss";
 
-interface WaterfallItem {
-  id: number;
-  coverImage: string;
-  title: string;
-  price: number;
-  // 其他可能的字段
-}
+import type { Product } from '@/services/types';
 
 interface WaterfallFlowProps {
   tabId: number;
@@ -17,11 +13,17 @@ interface WaterfallFlowProps {
 
 const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<WaterfallItem[]>([]);
+  const [data, setData] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [placeholderHeight, setPlaceholderHeight] = useState(0);
-  console.log("tabId", tabId);
+  const [queryParams, setQueryParams] = useState({
+    pageNum: 1,
+    pageSize: 10,
+    categoryId: tabId, // 使用从父组件传入的分类ID
+  })
+  const [total, setTotal] = useState<number | undefined>(undefined);
+
   // 获取图片高度比例，用于占位
   useEffect(() => {
     const systemInfo = Taro.getSystemInfoSync();
@@ -35,22 +37,15 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
 
     setLoading(true);
     try {
-      // 模拟API请求延迟
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // 模拟数据 - 实际项目中替换为真实API调用
-      const mockData: WaterfallItem[] = Array.from({ length: 10 }, (_, i) => ({
-        id: i + (currentPage - 1) * 10,
-        coverImage: `https://picsum.photos/300/400?random=${
-          i + (currentPage - 1) * 10
-        }`,
-        title: `商品${i + (currentPage - 1) * 10}`,
-        price: Math.floor(Math.random() * 1000) + 100,
-      }));
-
-      setData((prev) => [...prev, ...mockData]);
+      console.log('queryParams', queryParams)
+      const response = await productService.getProducts({
+        ...queryParams,
+        pageNum: currentPage
+      });
+      console.log('response', response)
+      setData((prev) => [...prev, ...response.rows]);
       setPage(currentPage + 1);
-      setHasMore(currentPage < 5); // 模拟最多5页数据
+      setHasMore(response.total ? currentPage * queryParams.pageSize < response.total : false);
     } finally {
       setLoading(false);
     }
@@ -58,14 +53,33 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
 
   // 初始加载和tab切换时重新加载
   useEffect(() => {
+    console.log("🔄 tabId变化，准备重新加载数据", {
+      oldTabId: queryParams.categoryId,
+      newTabId: tabId,
+      loading,
+      hasMore
+    });
+
+    // 强制重置状态
     setData([]);
     setPage(1);
     setHasMore(true);
-    // 先显示骨架屏，再加载数据
-    const timer = setTimeout(() => {
+    setLoading(false); // 确保可以发起新请求
+
+    // 立即更新queryParams
+    const newQueryParams = {
+      pageNum: 1,
+      pageSize: 10,
+      categoryId: tabId
+    };
+    console.log("更新queryParams:", newQueryParams);
+    setQueryParams(newQueryParams);
+
+    // 确保一定会发起请求
+    setTimeout(() => {
+      console.log("开始请求数据...");
       fetchData(1);
-    }, 300); // 稍微延迟让骨架屏显示一会儿
-    return () => clearTimeout(timer);
+    }, 0);
   }, [tabId]);
 
   // 上拉加载更多
@@ -75,62 +89,62 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
 
   // 监听页面滚动到底部
   useEffect(() => {
-    console.log("🔄 初始化滚动监听，当前环境:", process.env.TARO_ENV);
+    // console.log("🔄 初始化滚动监听，当前环境:", process.env.TARO_ENV);
     const handleReachBottom = () => {
-      console.log("✅ 触发滚动到底部事件");
+      // console.log("✅ 触发滚动到底部事件");
       if (!loading && hasMore) {
-        console.log("⏳ 开始加载第", page, "页数据...");
+        // console.log("⏳ 开始加载第", page, "页数据...");
         handleScrollToLower();
       }
     };
 
     // 抖音小程序特殊处理
     if (process.env.TARO_ENV === "tt") {
-      console.log("?? 初始化抖音小程序滚动监听");
+      // console.log("?? 初始化抖音小程序滚动监听");
       // 抖音小程序需要使用页面事件
       const pageInstance = Taro.getCurrentInstance();
       if (pageInstance?.page?.onReachBottom) {
-        console.log("🔔 注册抖音onReachBottom事件");
+        // console.log("🔔 注册抖音onReachBottom事件");
         pageInstance.page.onReachBottom = () => {
-          console.log("🎯 抖音onReachBottom触发");
+          // console.log("🎯 抖音onReachBottom触发");
           handleReachBottom();
         };
       }
       return () => {
-        console.log("🧹 清理抖音小程序事件监听");
+        // console.log("🧹 清理抖音小程序事件监听");
       };
     }
     // 京东小程序特殊处理
     else if (process.env.TARO_ENV === "jd") {
-      console.log("🛒 初始化京东小程序滚动监听");
+      // console.log("🛒 初始化京东小程序滚动监听");
       // 京东小程序需要使用页面事件
       const pageInstance = Taro.getCurrentInstance();
       if (pageInstance?.page?.onReachBottom) {
-        console.log("🔔 注册京东onReachBottom事件");
+        // console.log("🔔 注册京东onReachBottom事件");
         pageInstance.page.onReachBottom = () => {
-          console.log("🎯 京东onReachBottom触发");
+          // console.log("🎯 京东onReachBottom触发");
           handleReachBottom();
         };
       }
       return () => {
-        console.log("🧹 清理京东小程序事件监听");
+        // console.log("🧹 清理京东小程序事件监听");
       };
     }
     // 其他环境使用通用监听
     else {
-      console.log("🖱️ 初始化通用滚动监听");
+      // console.log("🖱️ 初始化通用滚动监听");
       const scrollHandler = () => {
         const scrollHeight = document.documentElement.scrollHeight;
         const scrollTop =
           document.documentElement.scrollTop || document.body.scrollTop;
         const clientHeight = document.documentElement.clientHeight;
         const distanceToBottom = scrollHeight - scrollTop - clientHeight;
-        console.log("📏 当前滚动位置:", {
-          scrollTop,
-          scrollHeight,
-          clientHeight,
-          distanceToBottom,
-        });
+        // console.log("📏 当前滚动位置:", {
+        //   scrollTop,
+        //   scrollHeight,
+        //   clientHeight,
+        //   distanceToBottom,
+        // });
         if (distanceToBottom < 100) {
           handleReachBottom();
         }
@@ -157,8 +171,8 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
             }}
           >
             <View className="image-container">
-              <Image
-                src={item.coverImage}
+            <Image
+                src={ensureImageUrl(item.logo) || ''}
                 mode="aspectFill"
                 lazyLoad
                 className="product-image"
@@ -171,8 +185,8 @@ const WaterfallFlow: React.FC<WaterfallFlowProps> = ({ tabId }) => {
                 style={{ height: `${placeholderHeight}px` }}
               />
             </View>
-            <Text className="title">{item.title}</Text>
-            <Text className="price">¥{item.price}</Text>
+            <Text className="title">{item.name}</Text>
+            <Text className="price">¥{item.salePrice}</Text>
           </View>
         ))}
         {loading && page === 1 ? (

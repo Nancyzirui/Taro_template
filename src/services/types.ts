@@ -1,10 +1,12 @@
 // API响应基础类型
 export interface BaseResponse<T = any> {
+  rows: T
   code: number
   message: string
-  data: T
+  data: T,
   timestamp?: number
   requestId?: string
+  total?: number
 }
 
 // 示例API返回数据类型
@@ -17,16 +19,12 @@ export interface SampleData {
 
 // 产品相关类型
 export interface Product {
+  goodsId: number
   id: number
+  listPrice: number
+  logo: string
   name: string
-  description?: string
-  price: number
-  originalPrice?: number
-  stock: number
-  images?: string[]
-  createdAt?: string
-  updatedAt?: string
-  status?: 'ON_SHELF' | 'OFF_SHELF'
+  salePrice: number
 }
 
 // 添加更多API返回数据类型...

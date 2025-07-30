@@ -27,7 +27,7 @@ export interface RequestOptions {
 export const enhanceRequest = <T>(
   config: RequestConfig,
   options: RequestOptions = {}
-): Promise<T> => {
+): Promise<BaseResponse<T>> => {
   const {
     showLoading = true,
     retryCount = 0,
@@ -36,7 +36,7 @@ export const enhanceRequest = <T>(
 
   let retry = 0
 
-  const executeRequest = (): Promise<T> => {
+  const executeRequest = (): Promise<BaseResponse<T>> => {
     // 显示加载状态
     if (showLoading) {
       Taro.showLoading({
@@ -70,14 +70,14 @@ export const enhanceRequest = <T>(
         if (res.code !== 200) {
           throw new Error(res.message || 'Request failed')
         }
-        return res.data
+        return res as BaseResponse<T>
       })
       .finally(() => {
         Taro.hideLoading()
       })
   }
 
-  const requestWithRetry = async (): Promise<T> => {
+  const requestWithRetry = async (): Promise<BaseResponse<T>> => {
     try {
       return await executeRequest()
     } catch (err) {
