@@ -1,40 +1,39 @@
 import { View, ScrollView, Text } from '@tarojs/components'
 import Taro, { useLoad } from '@tarojs/taro'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import ProductList from '@/components/ProductList'
+import { productService } from '@/services/product'
 import './index.scss'
 
 export default function Product() {
-  const [activeTab, setActiveTab] = useState(21)
+  const [activeTab, setActiveTab] = useState(0)
   const [key, setKey] = useState(0) // 用于强制刷新WaterfallFlow
+  const [categories, setCategories] = useState<{id: number, name: string}[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // 模拟分类数据
-  const categories = [
-    { id: 21, name: '推荐' },
-    { id: 22, name: '手机' },
-    { id: 23, name: '电脑' },
-    { id: 24, name: '家电' },
-    { id: 25, name: '服饰' },
-    { id: 26, name: '食品' },
-    { id: 27, name: '美妆' },
-    { id: 28, name: '运动' },
-    { id: 31, name: '推荐' },
-    { id: 32, name: '手机' },
-    { id: 33, name: '电脑' },
-    { id: 34, name: '家电' },
-    { id: 35, name: '服饰' },
-    { id: 36, name: '食品' },
-    { id: 37, name: '美妆' },
-    { id: 38, name: '运动' },
-    { id: 41, name: '推荐' },
-    { id: 42, name: '手机' },
-    { id: 43, name: '电脑' },
-    { id: 44, name: '家电' },
-    { id: 45, name: '服饰' },
-    { id: 46, name: '食品' },
-    { id: 47, name: '美妆' },
-    { id: 48, name: '运动' }
-  ]
+  // 获取分类数据
+  useEffect(() => {
+    setLoading(true)
+    productService.getCategoryList()
+      .then(res => {
+        setCategories(res.data.map(item => ({
+          id: item.id,
+          name: item.name
+        })))
+        // 设置第一个分类为默认选中
+        if (res.data.length > 0) {
+          setActiveTab(res.data[0].id)
+        }
+      })
+      .catch(err => {
+        console.error('获取分类列表失败:', err)
+        setError('加载分类失败，请重试')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
 
   // 分类切换处理
   const handleTabChange = useCallback((tabId: number) => {
@@ -50,15 +49,23 @@ export default function Product() {
     <View className='product-container'>
       {/* 左侧分类区域 */}
       <ScrollView scrollY className='category-list'>
-        {categories.map(category => (
-          <View
-            key={category.id}
-            className={`category-item ${activeTab === category.id ? 'active' : ''}`}
-            onClick={() => handleTabChange(category.id)}
-          >
-            <Text>{category.name}</Text>
-          </View>
-        ))}
+        {loading ? (
+          <View className="loading">加载中...</View>
+        ) : error ? (
+          <View className="error">{error}</View>
+        ) : categories.length === 0 ? (
+          <View className="empty">暂无分类数据</View>
+        ) : (
+          categories.map(category => (
+            <View
+              key={category.id}
+              className={`category-item ${activeTab === category.id ? 'active' : ''}`}
+              onClick={() => handleTabChange(category.id)}
+            >
+              <Text>{category.name}</Text>
+            </View>
+          ))
+        )}
       </ScrollView>
       {/* 右侧商品区域 */}
       <View className='product-list'>
@@ -79,7 +86,16 @@ export default function Product() {
         </View> */}
 
         {/* 瀑布流商品展示 */}
-        <ProductList tabId={activeTab} />
+        {
+          categories.length > 0 ? (
+            <ProductList
+              key={key} // 使用key强制重新渲染
+              tabId={activeTab}
+            />
+          ) : (
+            <View className="loading">加载商品中...</View>
+          )
+        }
       </View>
     </View>
   )

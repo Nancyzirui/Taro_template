@@ -1,6 +1,7 @@
 import { View, ScrollView, Image, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import { productService } from '@/services/product'
 import './index.scss'
 
 interface ProductItem {
@@ -20,25 +21,35 @@ export default function ProductList({ tabId }: ProductListProps) {
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [initializing, setInitializing] = useState(true)
+  const [page, setPage] = useState(1)
+  const [error, setError] = useState<string | null>(null)
 
-  // 模拟数据加载
+  // 真实数据加载
   const loadData = async () => {
     if (loading || !hasMore) return
 
     setLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 100))
+      const response = await productService.getProducts({
+        categoryId: tabId,
+        pageNum: page,
+        pageSize: 10
+      })
 
-      const newProducts = Array.from({ length: 16 }, (_, i) => ({
-        id: i + products.length,
-        image: `https://picsum.photos/200/200?random=${i + products.length}`,
-        title: `商品${i + products.length}`,
-        price: Math.floor(Math.random() * 500) + 100,
+      const newProducts = response.rows.map(item => ({
+        id: item.id,
+        image: item.logo || '',
+        title: item.name,
+        price: item.salePrice,
         loaded: false
       }))
 
-      setProducts(prev => [...prev, ...newProducts])
-      setHasMore(products.length < 50)
+      setProducts(prev => page === 1 ? newProducts : [...prev, ...newProducts])
+      setHasMore(response.total ? page * 10 < response.total : false)
+      setPage(prev => prev + 1)
+    } catch (err) {
+      console.error('加载商品失败:', err)
+      setError('加载商品失败，请重试')
     } finally {
       setLoading(false)
       setInitializing(false)

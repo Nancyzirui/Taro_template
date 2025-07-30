@@ -33,6 +33,7 @@
     padding: 20px;
     background: #fff;
     margin-top: 10px;
+    margin-bottom: 80px;
 
     .instruction-title {
       font-size: 22px;
@@ -44,8 +45,14 @@
       width: 100%;
     }
   }
-
-  .product-footer {
+  .footer_box{
+    height: 80px;
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
+    .product-footer {
+    position: fixed; /* 固定定位 */
+    bottom: 0; /* 紧贴页面底部 */
+    width: 100%; /* 宽度占满整个屏幕 */
     display: flex;
     height: 80px;
     background: #fff;
@@ -81,4 +88,6 @@
       }
     }
   }
+  }
+
 }

@@ -1,5 +1,5 @@
 import { enhanceRequest } from '@/utils/request-helper'
-import type { BaseResponse, Product } from '@/services/types'
+import type { BaseResponse, Product, ProductDetails } from '@/services/types'
 import type { RequestOptions } from '@/utils/request-helper'
 
 interface CategoryItem {
@@ -32,6 +32,16 @@ export const productService = {
       data: params
     }, {
       showLoading: false, // 列表页通常自行处理加载状态
+      ...options
+    })
+  },
+  getProductDetail: (id: number, options?: RequestOptions): Promise<BaseResponse<ProductDetails>> => {
+    return enhanceRequest<ProductDetails>({
+      url: `/goods/detail/${id}`,
+      method: 'GET'
+    }, {
+      showLoading: true,
+      loadingText: '加载商品详情...',
       ...options
     })
   },

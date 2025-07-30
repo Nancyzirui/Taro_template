@@ -26,5 +26,18 @@ export interface Product {
   name: string
   salePrice: number
 }
-
+export interface ProductDetails {
+  deductionPeriod?: boolean
+  enabledPeriod?: boolean
+  enabledSingle?: boolean
+  externalUrl?: string
+  goodsId: number
+  id: number
+  introduce: string
+  listPrice: number
+  logo: string
+  name: string
+  salePrice: number
+  type: number
+}
 // 添加更多API返回数据类型...
